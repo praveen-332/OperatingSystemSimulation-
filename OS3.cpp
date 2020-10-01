@@ -1,28 +1,11 @@
-/*HANI ABOUDESHISHA                       CSCI340                     ASSIGNMENT 1       OPERATING SYSTEM DEMO*/
-/* this program will simulate the CPU handling of processes and intruptions from users or processes
-++the program simulate the processes life cycle and its movemenet to different system and devices queues as a result of a signal or intruption
-++the program contains three vectors that contain the devices - hard disks , printers and CD/RW
-++each device contain its own queue that along with the ready queues will be used to simulate a process life cycle
-++each device has its own ID , also each process has its own PCB
-++the program contains four classes, one for the process and one for each device
-++the program contains three global variables - number of devices- since it is needed to be avilable for all functions
-++the main function contains  two functions only, one for system setting mode and the other for running mode */
 
-#include <algorithm>
-#include <iostream>
-#include <queue>
-#include <vector>
-#include <string>
-#include <sstream>
-#include <iomanip>
-#include<cmath>
-#include<ctime>
+
+#include <bits/stdc++.h>
 using namespace std;
 int n,m,k;  // n for hard drives , m for printers, k for cds
 double TimeSlice=0;  /// <-------------time slice for RR algo - defined by user------
 double total_CPU_Times=0;  /// <------------------for all processes
 int totalProcesses =0;
-int pageSize=0;
 int TotalMemorySize=0;
 int FreeMomery =0;
 int TotalUsedFrames=0;
@@ -31,6 +14,13 @@ int framSize=0;
 int AllPagesCount=0;
 int AllFramesCounts=0;
 int maxProcessSize=0;
+int pageSize=0;
+vector <Printers> PRvec;          // vector of devices will be copied here for functions access
+vector <HardDrives> HDvec;
+vector <CD> CDvec;
+vector <Frames> framesV;
+vector< Frames > freeFramesV;
+
 int offest=0;
 int frameBits=0;
 int pagesBits=0;
@@ -70,10 +60,6 @@ class Process{                                  /// Processes class, contains mo
              void set_starting_memory(int);
              int get_starting_memory();
              void set_ending_memory();
-             int get_ending_memory();
-             void set_length(int);
-             int getlength();
-             void set_WRX(char);
              char get_WRX();
              void setMSR( string);
              void setMLR( string);
@@ -90,6 +76,11 @@ class Process{                                  /// Processes class, contains mo
              void set_cpuV(int);
              int get_cpuV();
              double get_avgCPUtime();
+             int get_ending_memory();
+             void set_length(int);
+             int getlength();
+             void set_WRX(char);
+
               void set_ProcessBurstTime( double);
              double get_ProcessBurstTime  ();
              void set_ProcessBurstCount(int);
@@ -158,23 +149,6 @@ class HardDrives{
               int CylinderNUM;
 
 };
-//-------------------------------------------------------------------------------------------------------------------------//
-class Printers{            /// same as hard drive class
-      public:
-             Printers();
-             ~Printers();
-             Printers( int i);  //
-             queue< Process > PRqueue;
-             int number_of_items_in_PR_Queue();
-             bool is_empty();
-             void print_PRqueue();
-             int getPR_ID();
-             string name;
-             string getName();
-      private:
-              int PR_ID;
-};
-//--------------------------------------------------------------------------------------------------------------------------//
 class CD{                 ///same as hard drive class
       public:
              CD();
@@ -190,6 +164,10 @@ class CD{                 ///same as hard drive class
       private:
               int CD_ID;
 };
+//-------------------------------------------------------------------------------------------------------------------------//
+
+//--------------------------------------------------------------------------------------------------------------------------//
+
 //--------------------------------------------------------------------------------------------------------------------------
     
 ///////////////////////////////////////////General Functions///////////////////////////////////////////
@@ -205,12 +183,22 @@ void runningMode();                            // second main function , we be u
 bool cmp (  Process s1 ,  Process s2);
 
 //------------------------------------------------------------------------------------------------------
-vector <Printers> PRvec;          // vector of devices will be copied here for functions access
-vector <HardDrives> HDvec;
-vector <CD> CDvec;
-vector <Frames> framesV;
-vector< Frames > freeFramesV;
 
+class Printers{            /// same as hard drive class
+      public:
+             Printers();
+             ~Printers();
+             Printers( int i);  //
+             queue< Process > PRqueue;
+             int number_of_items_in_PR_Queue();
+             bool is_empty();
+             void print_PRqueue();
+             int getPR_ID();
+             string name;
+             string getName();
+      private:
+              int PR_ID;
+};
 
 
 ////***********************************************************************************************//////
@@ -280,20 +268,7 @@ void fillVector(vector<HardDrives> & HDVec,int p){
        CDvec=CDVec;
 }
 
-//--------------------------------------------------------------------------------------------------------//
-bool isPowerOfTwo (unsigned int x)
-{
- int counterOFS=0;    
- while (((x % 2) == 0) && x > 1) /* While x is even and > 1 */
-  { x /= 2;
-   isPowerOfTwo ( x);
-   counterOFS++;
-   }
- if (x == 1){ 
-       offest = counterOFS; 
-       return true;}
- else{ return false;}
-}
+
 //----------------------------------------------------------------------------------------------------------//
 bool isDividable (unsigned int x,unsigned int y)
 {
@@ -334,6 +309,20 @@ else
 return   
  16;   
 } 
+//--------------------------------------------------------------------------------------------------------//
+bool isPowerOfTwo (unsigned int x)
+{
+ int counterOFS=0;    
+ while (((x % 2) == 0) && x > 1) /* While x is even and > 1 */
+  { x /= 2;
+   isPowerOfTwo ( x);
+   counterOFS++;
+   }
+ if (x == 1){ 
+       offest = counterOFS; 
+       return true;}
+ else{ return false;}
+}
 //---------------------------------------------------
 int set_max_pages_per_process( int e, int q){
                            if (e % q ==0) { return e/q ;}
@@ -391,6 +380,15 @@ void printVector(  vector <CD>& newHDvec){
     }
 
 }
+bool cmp1 (  Process s1 ,  Process s2){
+  if ( s1.get_ProcSize() != s2.get_ProcSize()){
+       return s1.get_ProcSize() > s2.get_ProcSize() ;
+       }
+   else{                                 // if both share the same cylinder, then use the id as breaker
+        return s1.getID() < s2.getID() ;
+
+        }
+}
 //--------------------------------------------------------------------------------------------------------//
 bool cmp (  Process s1 ,  Process s2){
   if ( s1.get_CylinderNum() != s2.get_CylinderNum()){
@@ -402,15 +400,7 @@ bool cmp (  Process s1 ,  Process s2){
         }
 }
 //-------------------------------------------------------------------------
-bool cmp1 (  Process s1 ,  Process s2){
-  if ( s1.get_ProcSize() != s2.get_ProcSize()){
-       return s1.get_ProcSize() > s2.get_ProcSize() ;
-       }
-   else{                                 // if both share the same cylinder, then use the id as breaker
-        return s1.getID() < s2.getID() ;
 
-        }
-}
 //std::sort(jobPool.begin(), jobPool.end(), cmp1);  // by process size
 //-----------------------------------------------------------------------------------------------------------//
 //vector < process>  
@@ -1024,23 +1014,7 @@ void runningMode(){
                         cout<<" invalid selection, try again"<<endl;
                         cin>> rw;
                         }
-                   if( rw == 'r' || rw=='R'){
-                     //  int startingMem;   // maybe string better to avoid errors
-                       string startingMem;
-                    //   int length;
-                       string length="  ";
-                       string file_name;
-                       cout<<" please enter starting memory "<<endl;
-                       cin >> startingMem;
-                     //  cout<< " please enter length "<<endl;
-                    //   cin >> length;
-                       cout<<" please enter file name "<<endl;
-                       cin>> file_name;
-                       cpuQueue.front().setMSR(startingMem);   // include them in def
-                       cpuQueue.front().setMLR(length);
-                       cpuQueue.front().setFileName(file_name);
-                       cpuQueue.front().set_WRX(rw);
-                       }
+                  
 
                     if (rw == 'w' || rw=='W'){
 
@@ -1094,6 +1068,23 @@ void runningMode(){
                               sshex>>  std::hex>> hexad;
                               cpuQueue.front().set_pageNum(hexad);
                               }
+                   if( rw == 'r' || rw=='R'){
+                     //  int startingMem;   // maybe string better to avoid errors
+                       string startingMem;
+                    //   int length;
+                       string length="  ";
+                       string file_name;
+                       cout<<" please enter starting memory "<<endl;
+                       cin >> startingMem;
+                     //  cout<< " please enter length "<<endl;
+                    //   cin >> length;
+                       cout<<" please enter file name "<<endl;
+                       cin>> file_name;
+                       cpuQueue.front().setMSR(startingMem);   // include them in def
+                       cpuQueue.front().setMLR(length);
+                       cpuQueue.front().setFileName(file_name);
+                       cpuQueue.front().set_WRX(rw);
+                       }
                       //  cout << "in dec "<<hexad<<endl;  
                        // cpuQueue.front().set_pageNum(hexad);
                      //   cout<<"page number "<< cpuQueue.front().get_pageNum()<<endl;
