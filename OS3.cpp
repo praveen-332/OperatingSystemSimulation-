@@ -1,4 +1,3 @@
-/*HANI ABOUDESHISHA                       CSCI340                     ASSIGNMENT 1       OPERATING SYSTEM DEMO*/
 /* this program will simulate the CPU handling of processes and intruptions from users or processes
 ++the program simulate the processes life cycle and its movemenet to different system and devices queues as a result of a signal or intruption
 ++the program contains three vectors that contain the devices - hard disks , printers and CD/RW
@@ -133,31 +132,7 @@ class Process{                                  /// Processes class, contains mo
              };
 //=============================================================================================================================//
 ///        hard drives class , will be manipulated by a fillVector function to creat devices and stored in a vectore
-class HardDrives{
-      public:
-             HardDrives();
-             ~HardDrives();
-             HardDrives( int i);  //
-
-             queue< Process > HDqueue;
-             int number_of_items_in_Hd_Queue();
-             bool is_empty();
-             void print_HDqueue();
-             int getHD_ID();
-             string name;
-             string getName();
-             vector<Process> HDvector;
-             void set_headPosition(int);
-             int get_headPosition();
-             void set_CylinderNUM(int);
-             int get_CylinderNUM();
-             
-      private:
-              int HD_ID;
-              int headPosition;
-              int CylinderNUM;
-
-};
+c
 //-------------------------------------------------------------------------------------------------------------------------//
 class Printers{            /// same as hard drive class
       public:
@@ -190,26 +165,55 @@ class CD{                 ///same as hard drive class
       private:
               int CD_ID;
 };
+
+lass HardDrives{
+      public:
+             HardDrives();
+             ~HardDrives();
+             HardDrives( int i);  //
+
+             queue< Process > HDqueue;
+             int number_of_items_in_Hd_Queue();
+             bool is_empty();
+             void print_HDqueue();
+             int getHD_ID();
+             string name;
+             string getName();
+             vector<Process> HDvector;
+             void set_headPosition(int);
+             int get_headPosition();
+             void set_CylinderNUM(int);
+             int get_CylinderNUM();
+             
+      private:
+              int HD_ID;
+              int headPosition;
+              int CylinderNUM;
+
+};
 //--------------------------------------------------------------------------------------------------------------------------
     
 ///////////////////////////////////////////General Functions///////////////////////////////////////////
 string append( string str, int i);
-void fillVector(vector<HardDrives>&,int ); /// to creat and store devices
-void fillVector(vector<Printers>&, int );
+
 void fillVector(vector<CD>& ,int );
 void printVector( vector <HardDrives>&);
 void printVector(  vector <Printers>&);     /// to acess and print devices
 void printVector(  vector <CD>&);
+void fillVector(vector<HardDrives>&,int ); /// to creat and store devices
+void fillVector(vector<Printers>&, int );
+
 void SeysGenMode();                           // first main function , will be used to set up system
 void runningMode();                            // second main function , we be used to creat and move processes
 bool cmp (  Process s1 ,  Process s2);
 
 //------------------------------------------------------------------------------------------------------
 vector <Printers> PRvec;          // vector of devices will be copied here for functions access
-vector <HardDrives> HDvec;
 vector <CD> CDvec;
 vector <Frames> framesV;
 vector< Frames > freeFramesV;
+vector <HardDrives> HDvec;
+
 
 
 
@@ -269,16 +273,7 @@ void fillVector(vector<HardDrives> & HDVec,int p){
        PRvec=PRVec;
 }
  //----------------------------------------------------------------------------------------------------------//
- void fillVector(vector<CD> & CDVec,int p){
-     for (int i=0; i< p; i++)
-     {
-       CD cd(i);
-       cd.name = append("c",i);
-       CDVec.push_back( cd);
-       cout<<endl;
-       }
-       CDvec=CDVec;
-}
+
 
 //--------------------------------------------------------------------------------------------------------//
 bool isPowerOfTwo (unsigned int x)
@@ -293,6 +288,16 @@ bool isPowerOfTwo (unsigned int x)
        offest = counterOFS; 
        return true;}
  else{ return false;}
+}
+ void fillVector(vector<CD> & CDVec,int p){
+     for (int i=0; i< p; i++)
+     {
+       CD cd(i);
+       cd.name = append("c",i);
+       CDVec.push_back( cd);
+       cout<<endl;
+       }
+       CDvec=CDVec;
 }
 //----------------------------------------------------------------------------------------------------------//
 bool isDividable (unsigned int x,unsigned int y)
@@ -321,13 +326,14 @@ int find_how_many_Pages_bits(int j){ // j is # pages
 if (j<=2){ return 1;}
 if (j> 2 && j <=4 ){ return 2;}
 if (j> 4 && j <=8) {return 3;}
-if (j > 8 && j<=16 ){ return 4; }
 if (j > 16 && j<=32 ){ return 5; }
 if (j > 32 && j<=64 ){ return 6; }
 if (j > 64 && j<=128 ){ return 7; }
 if (j > 128 && j<=256 ){ return 8; }   
 if (j > 256 && j <= 512){ return 9;}
 if (j >512  && j<=1024 ){ return 10; }  
+if (j > 8 && j<=16 ){ return 4; }
+
 if (j >1024  && j<=2048){ return 11; } 
 if (j >2048 && j<=4096 ){ return 12; }
 else 
